@@ -25,7 +25,7 @@
 #endif /* USING_AGENTX_MODULE */
  
 /* Define if compiling with the mibII/vacm_conf module files.  */
-#define USING_MIBII_VACM_CONF_MODULE 1
+#define USING_MIBII_VACM_CONF_MODULE 0
  
 /* Define if compiling with the utilities/execute module files.  */
 #define USING_UTILITIES_EXECUTE_MODULE 1

@@ -73,6 +73,7 @@ set(snmplib_src
 )
 
 include_directories(include)
+include_directories(agent)
 include_directories(snmplib)
 if(WIN32)
 	include_directories(win32)
@@ -87,12 +88,29 @@ add_library(netsnmplib ${snmplib_src})
 add_executable(snmptrap "apps/snmptrap.c")
 target_link_libraries(snmptrap netsnmplib)
 
+set(snmptrapd_src 
+	"apps/snmptrapd.c"
+	"apps/snmptrapd_handlers.c"
+	"apps/snmptrapd_auth.c"
+
+	"agent/snmp_agent.c"
+	"agent/agent_trap.c"
+)
+if(WIN32)
+	list(APPEND snmptrapd_src snmplib/winservice.c)
+endif()
+
+#add_executable(snmptrapd ${snmptrapd_src})
+#target_link_libraries(snmptrapd netsnmplib)
+#target_include_directories(snmptrapd PRIVATE agent/mibgroup)
+
 add_executable(phosphor-snmp "apps/phosphor_snmp.cpp" "apps/snmp_notification.cpp" "apps/lg2_logger.cpp")
 target_link_libraries(phosphor-snmp netsnmplib)
 set_target_properties(phosphor-snmp PROPERTIES CXX_STANDARD 20)
 
 if(WIN32)
-	target_compile_options(phosphor-snmp PRIVATE /Zc:__cplusplus)
 	target_link_libraries(snmptrap ws2_32)
+	#target_link_libraries(snmptrapd ws2_32)
 	target_link_libraries(phosphor-snmp ws2_32)
+	target_compile_options(phosphor-snmp PRIVATE /Zc:__cplusplus)
 endif()

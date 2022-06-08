@@ -6,10 +6,6 @@
 #include <net-snmp/agent/net-snmp-agent-includes.h>
 // clang-format on
 
-#ifdef WIN32
-#undef inline
-#endif
-
 #include "snmp.hpp"
 #include "snmp_notification.hpp"
 
