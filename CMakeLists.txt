@@ -6,7 +6,6 @@ set(snmplib_src
 	snmplib/asn1.c
 	snmplib/callback.c
 	snmplib/check_varbind.c
-	snmplib/closedir.c
 	snmplib/container.c
 	snmplib/container_binary_array.c
 	snmplib/container_iterator.c
@@ -14,9 +13,7 @@ set(snmplib_src
 	snmplib/container_null.c
 	snmplib/data_list.c
 	snmplib/default_store.c
-	snmplib/fd_event_manager.c
-	snmplib/getopt.c
-	snmplib/gettimeofday.c
+	snmplib/fd_event_manager.c	
 	snmplib/inet_ntop.c
 	snmplib/inet_pton.c
 	snmplib/int64.c
@@ -26,11 +23,9 @@ set(snmplib_src
 	snmplib/md5.c
 	snmplib/mib.c
 	snmplib/mt_support.c
-	snmplib/oid_stash.c
-	snmplib/opendir.c
+	snmplib/oid_stash.c	
 	snmplib/parse.c
-	snmplib/read_config.c
-	snmplib/readdir.c
+	snmplib/read_config.c	
 	snmplib/scapi.c
 	snmplib/sd-daemon.c
 	snmplib/snmp-tc.c
@@ -72,16 +67,39 @@ set(snmplib_src
 	snmplib/vacm.c
 )
 
-include_directories(include)
-include_directories(agent)
-include_directories(snmplib)
 if(WIN32)
 	include_directories(win32)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 	list(APPEND snmplib_src
 		snmplib/asprintf.c
+		snmplib/opendir.c
+		snmplib/readdir.c
+		snmplib/closedir.c
+		snmplib/getopt.c
+		snmplib/gettimeofday.c
+	)
+else()
+	list(APPEND snmplib_src
+		snmplib/transports/snmpUnixDomain.c
 	)
 endif()
+
+include_directories(include)
+include_directories(agent)
+include_directories(snmplib)
+
+
+list(APPEND snmplib_src
+	"snmplib/openssl/openssl_aes_cfb.c"
+	"snmplib/openssl/openssl_aes_core.c"
+	"snmplib/openssl/openssl_cbc_enc.c"
+	"snmplib/openssl/openssl_cfb128.c"
+	"snmplib/openssl/openssl_des_enc.c"
+	"snmplib/openssl/openssl_md5.c"
+	#"snmplib/openssl/openssl_ncbc_enc.c"
+	"snmplib/openssl/openssl_set_key.c"
+	"snmplib/openssl/openssl_sha1.c"
+)
 
 add_library(netsnmplib ${snmplib_src})
 
@@ -104,7 +122,11 @@ endif()
 #target_link_libraries(snmptrapd netsnmplib)
 #target_include_directories(snmptrapd PRIVATE agent/mibgroup)
 
-add_executable(phosphor-snmp "apps/phosphor_snmp.cpp" "apps/snmp_notification.cpp" "apps/lg2_logger.cpp")
+add_executable(phosphor-snmp 
+	"apps/phosphor_snmp.cpp" 
+	"apps/snmp_notification.cpp" 
+	#"apps/lg2_logger.cpp"
+)
 target_link_libraries(phosphor-snmp netsnmplib)
 set_target_properties(phosphor-snmp PROPERTIES CXX_STANDARD 20)
 

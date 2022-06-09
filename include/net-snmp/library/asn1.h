@@ -76,11 +76,16 @@ SOFTWARE.
 #define IS_CONSTRUCTOR(byte)	((byte) & ASN_CONSTRUCTOR)
 #define IS_EXTENSION_ID(byte)	(((byte) & ASN_EXTENSION_ID) == ASN_EXTENSION_ID)
 
+    /*
     struct counter64 {
         u_long          high;
         u_long          low;
     };
-
+    */
+    struct counter64 {
+        u_int           high;
+        u_int           low;
+    };
 #ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
     typedef struct counter64 integer64;
     typedef struct counter64 unsigned64;

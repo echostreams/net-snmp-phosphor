@@ -21,6 +21,13 @@ namespace phosphor
                 obj.sendTrap();
             }
 
+            template <typename T, typename... ArgTypes>
+            void sendTrapV3(ArgTypes&&... tArgs)
+            {
+                T obj(std::forward<ArgTypes>(tArgs)...);
+                obj.sendTrapV3();
+            }
+
         } // namespace snmp
     } // namespace network
 } // namespace phosphor

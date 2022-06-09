@@ -253,7 +253,7 @@
 /* #undef NETSNMP_DRAFT_BLUMENTHAL_AES_04 */
 
 /* Define to 1 if you have the `AES_cfb128_encrypt' function. */
-/* #undef HAVE_AES_CFB128_ENCRYPT */
+#define HAVE_AES_CFB128_ENCRYPT 1
 
 /* Define to 1 if you have `alloca', as a function or macro. */
 /* #undef HAVE_ALLOCA */
@@ -1488,6 +1488,10 @@
 
 /* define if you are using the MD5 code ...*/
 #define NETSNMP_USE_INTERNAL_MD5 1
+
+/* define if you are using internal modified openssl */
+#define NETSNMP_USE_INTERNAL_CRYPTO 1
+#define HAVE_AES 1
 
 #endif /* ! NETSNMP_USE_OPENSSL */
 

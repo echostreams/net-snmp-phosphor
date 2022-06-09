@@ -19,9 +19,12 @@ int main(int argc, char** argv)
     {
         uint32_t errorID = 111;
         uint64_t timestamp = 0x12345678;
-        int32_t isev = 7;
-        std::string message = "Test Message";
-        sendTrap<OBMCErrorNotification>(errorID, timestamp, isev, message);
+        int32_t isev = 7;        
+
+        sendTrap<OBMCErrorNotification>(errorID, timestamp, isev, "Test V2 Message.");
+
+        sendTrapV3<OBMCErrorNotification>(errorID, timestamp, isev, "Test V3 Message.");
+
     }
     //catch (const InternalFailure& e)
     catch (const std::exception& e)

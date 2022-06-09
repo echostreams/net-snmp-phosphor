@@ -73,7 +73,9 @@
 #ifdef OPENSSL_UNISTD
 # include OPENSSL_UNISTD
 #else
+#if HAVE_UNISTD_H
 # include <unistd.h>
+#endif
 #endif
 #include <math.h>
 #endif
