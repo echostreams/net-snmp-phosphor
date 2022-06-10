@@ -1,0 +1,578 @@
+INWIN-JBOD-MIB  DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY,
+    OBJECT-TYPE,
+    Counter32,
+    Integer32,
+    IpAddress,
+    enterprises
+        FROM SNMPv2-SMI
+    MODULE-COMPLIANCE,
+    OBJECT-GROUP
+        FROM SNMPv2-CONF
+    TEXTUAL-CONVENTION,
+    MacAddress,
+    RowStatus,
+    TruthValue,
+    DateAndTime,
+    DisplayString
+        FROM SNMPv2-TC;
+
+-- Textual Conventions
+
+    inwinMib MODULE-IDENTITY
+    LAST-UPDATED "1604180000Z" -- April 18, 2016
+    ORGANIZATION "In-Win Development Inc."
+    CONTACT-INFO
+        "Mr. Wes Lu
+        Postal: In-Win Development Inc.
+            No. 57, lane 350, Nanshang Rd., Gueishan Dist., 
+            Taoyuan City,
+            Taiwan, R.O.C.
+            Phone: +886 3 322 9898 ext. 1801
+            E-mail: wes.lu@in-win.com.tw"
+    DESCRIPTION
+        "The MIB module to describe the In-Win network device private functions."
+
+    REVISION "1604180000Z"
+    DESCRIPTION
+        "Initial Compilable Version."
+    ::= { enterprises 47464 }
+
+SnmpAdminString ::= TEXTUAL-CONVENTION
+    DISPLAY-HINT "255a"
+    STATUS       current
+    DESCRIPTION "An octet string containing administrative
+                 information, preferably in human-readable form.
+
+                 To facilitate internationalization, this
+                 information is represented using the ISO/IEC
+                 IS 10646-1 character set, encoded as an octet
+                 string using the UTF-8 transformation format
+                 described in [RFC2044].
+
+                 Since additional code points are added by
+                 amendments to the 10646 standard from time
+                 to time, implementations must be prepared to
+                 encounter any code point from 0x00000000 to
+                 0x7fffffff.
+
+                 The use of control codes should be avoided.
+
+                 When it is necessary to represent a newline,
+                 the control code sequence CR LF should be used.
+
+                 The use of leading or trailing white space should
+                 be avoided.
+
+                 For code points not directly supported by user
+                 interface hardware or software, an alternative
+                 means of entry and display, such as hexadecimal,
+                 may be provided.
+
+                 For information encoded in 7-bit US-ASCII,
+                 the UTF-8 encoding is identical to the
+                 US-ASCII encoding.
+
+                 Note that when this TC is used for an object that
+                 is used or envisioned to be used as an index, then
+                 a SIZE restriction must be specified so that the
+                 number of sub-identifiers for any object instance
+                 does not exceed the limit of 128, as defined by
+                 [RFC1905].
+                "
+    SYNTAX       OCTET STRING (SIZE (0..128))
+
+-- Generic information
+
+platform            OBJECT IDENTIFIER ::= {  inwinMib 1  }
+-- platform 1 is Server relevant system
+
+product             OBJECT IDENTIFIER ::= {  platform 2  }
+-- product 1 is JBoD network management system
+
+jbodDevBase         OBJECT IDENTIFIER ::= {  product 1   }
+
+-- jbodDevBase
+jbodDevSerial OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The manufacturer's serial number for this device."
+    ::= { jbodDevBase 1 }
+
+jbodDevSwVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The network management board version."
+    ::= { jbodDevBase 2 }
+
+jbodDevMacAddress OBJECT-TYPE
+    SYNTAX      MacAddress
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Identifies the network management board MAC address. If it is
+         unknown, returns 00-00-00-00-00-00."
+    ::= { jbodDevBase 3 }
+
+jbodDevDateTime OBJECT-TYPE
+    SYNTAX      DateAndTime
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The date and time, with optional timezone
+         information."
+    ::= { jbodDevBase 4 }
+
+jbodDevExpanderPHwVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The primary expander hardware version."
+    ::= { jbodDevBase 5 }
+
+jbodDevExpanderSHwVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The secondary expander hardware version."
+    ::= { jbodDevBase 6 }
+
+jbodDevExpanderPFwVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The primary expander firmware version."
+    ::= { jbodDevBase 7 }
+
+jbodDevExpanderSFwVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The secondary expander firmware version."
+    ::= { jbodDevBase 8 }
+
+jbodDevExpanderPMfgVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The primary expander MFG configuration version."
+    ::= { jbodDevBase 9 }
+
+jbodDevExpanderSMfgVersion OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "The secondary expander MFG configuration version."
+    ::= { jbodDevBase 10 }
+
+jbodDevSwUpgradeName OBJECT-TYPE
+    SYNTAX      SnmpAdminString (SIZE (0..64))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The file name of the software image to be loaded into this
+         device. Unless set via SNMP, this is the file name
+         specified by the tftp server that corresponds to
+         the software version that is desired for this device."
+    ::= { jbodDevBase 11 }
+
+jbodDevSwUpgradeServer OBJECT-TYPE
+    SYNTAX      IpAddress
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "The address of the TFTP server used for software upgrade
+         If the TFTP server is unknown, return 0.0.0.0."
+    ::= { jbodDevBase 12 }
+
+jbodDevSwUpgrade OBJECT-TYPE
+    SYNTAX INTEGER {
+        nothing(0),
+        doUpgrade(1),
+        upgrading(2),
+        upgradeOK(3),
+        upgradeFail(4)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Setting this object to doUpgrade(1) causes the device to upgrade
+         Reading this object will returns current upgrade status except doUpgrade(1)."
+    ::= { jbodDevBase 13 }
+
+jbodDevResetNow OBJECT-TYPE
+    SYNTAX INTEGER {
+        nothing(0),
+        netManagementBoardOnly(1),
+        primaryExpander(2),
+        netMgmtPrimary(3),
+        secondaryExpander(4),
+        netMgmtSecondary(5),
+        primarySecondary(6),
+        all(7)
+    }
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        "Read this object always return 0.
+         Setting this object to bit 0,1,2 causes the relevant devices to reset.
+         bit 0 - ethernet management board
+         bit 1 - the primary expander
+         bit 2 - the secondary expander"
+    ::= { jbodDevBase 14 }
+
+
+-- jbodDevTemperatureTable
+jbodDevTemperatureTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF JbodDevTemperatureEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of temperature sensor values that may be
+         of interest in system monitor and troubleshooting."
+    ::= {  product 2  }
+
+jbodDevTemperatureEntry OBJECT-TYPE
+    SYNTAX      JbodDevTemperatureEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of temperature sensor values that may be
+         of interest in system monitor and troubleshooting."
+    INDEX { temperatureIndex }
+    ::= { jbodDevTemperatureTable 1 }
+
+JbodDevTemperatureEntry ::= SEQUENCE {
+    temperatureIndex        Integer32,
+    temperatureDescription  SnmpAdminString,
+    temperatureStatus       SnmpAdminString,
+    temperatureValue        Integer32,
+    temperatureUnit         SnmpAdminString
+}
+
+temperatureIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Provides relative ordering of the objects in the temperature
+         sensor. "
+    ::= { jbodDevTemperatureEntry 1 }
+
+temperatureDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the temperature sensor"
+    ::= { jbodDevTemperatureEntry 2 }
+
+temperatureStatus OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the temperature sensor status"
+    ::= { jbodDevTemperatureEntry 3 }
+
+temperatureValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the degree of sensor temperature"
+    ::= { jbodDevTemperatureEntry 4 }
+
+temperatureUnit OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the temperature unit, should be 1/10 Celsius or 1/10 Fahrenheit"
+    ::= { jbodDevTemperatureEntry 5 }
+
+
+-- jbodDevVoltage
+jbodDevVoltageTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF JbodDevVoltageEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of voltage sensor values that may be
+         of interest in system monitor and troubleshooting."
+    ::= {  product 3  }
+
+jbodDevVoltageEntry OBJECT-TYPE
+    SYNTAX      JbodDevVoltageEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of voltage sensor values that may be
+         of interest in system monitor and troubleshooting."
+    INDEX { voltageIndex }
+    ::= { jbodDevVoltageTable 1 }
+
+JbodDevVoltageEntry ::= SEQUENCE {
+    voltageIndex        Integer32,
+    voltageDescription  SnmpAdminString,
+    voltageStatus       SnmpAdminString,
+    voltageValue        Integer32,
+    voltageUnit         SnmpAdminString
+}
+
+voltageIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Provides relative ordering of the objects in the voltage
+         sensor. "
+    ::= { jbodDevVoltageEntry 1 }
+
+voltageDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the voltage sensor"
+    ::= { jbodDevVoltageEntry 2 }
+
+voltageStatus OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the voltage sensor status"
+    ::= { jbodDevVoltageEntry 3 }
+
+voltageValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the sensor voltage value"
+    ::= { jbodDevVoltageEntry 4 }
+
+voltageUnit OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the voltage unit (maybe 1/10)"
+    ::= { jbodDevVoltageEntry 5 }
+
+
+-- jbodDevFan
+jbodDevFanTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF JbodDevFanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of fan sensor values that may be
+         of interest in system monitor and troubleshooting."
+    ::= {  product 4  }
+
+jbodDevFanEntry OBJECT-TYPE
+    SYNTAX      JbodDevFanEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains a lot of voltage sensor values that may be
+         of interest in system monitor and troubleshooting."
+    INDEX { fanIndex }
+    ::= { jbodDevFanTable 1 }
+
+JbodDevFanEntry ::= SEQUENCE {
+    fanIndex        Integer32,
+    fanDescription  SnmpAdminString,
+    fanStatus       SnmpAdminString,
+    fanValue        Integer32,
+    fanUnit         SnmpAdminString
+}
+
+fanIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Provides relative ordering of the objects in the fan
+         sensor. "
+    ::= { jbodDevFanEntry 1 }
+
+fanDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the fan sensor"
+    ::= { jbodDevFanEntry 2 }
+
+fanStatus OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the fan sensor status"
+    ::= { jbodDevFanEntry 3 }
+
+fanValue OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the sensor fan value"
+    ::= { jbodDevFanEntry 4 }
+
+fanUnit OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+    "Describe the fan speed unit: RPM"
+    ::= { jbodDevFanEntry 5 }
+
+-- jbodDevDisk
+jbodDevDiskTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF JbodDevDiskEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains system disk for monitor or troubleshooting."
+    ::= {  product 5  }
+
+jbodDevDiskEntry OBJECT-TYPE
+    SYNTAX      JbodDevDiskEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains system disk."
+    INDEX { diskIndex }
+    ::= { jbodDevDiskTable 1 }
+
+JbodDevDiskEntry ::= SEQUENCE {
+    diskIndex       Integer32,
+    phyId           Integer32,
+    nlRate          Integer32,
+    sasAddress      OCTET STRING,
+    diskType        SnmpAdminString,
+    status          SnmpAdminString
+}
+
+diskIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "the disk slot"
+    ::= { jbodDevDiskEntry 1 }
+
+phyId OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Expander's PHY ID"
+    ::= { jbodDevDiskEntry 2 }
+
+nlRate OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Disk support rate"
+    ::= { jbodDevDiskEntry 3 }
+
+sasAddress OBJECT-TYPE
+    SYNTAX      OCTET STRING (SIZE (8))
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the disk SAS address"
+    ::= { jbodDevDiskEntry 4 }
+
+diskType OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the disk type"
+    ::= { jbodDevDiskEntry 5 }
+
+status OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the PHY status"
+    ::= { jbodDevDiskEntry 6 }
+
+-- jbodDevLog
+jbodDevLogTable OBJECT-TYPE
+    SYNTAX      SEQUENCE OF JbodDevLogEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains system logs for monitor or troubleshooting."
+    ::= {  product 6  }
+
+jbodDevLogEntry OBJECT-TYPE
+    SYNTAX      JbodDevLogEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "Contains system logs. The latest log is put on index = 1"
+    INDEX { logIndex }
+    ::= { jbodDevLogTable 1 }
+
+JbodDevLogEntry ::= SEQUENCE {
+    logIndex        Integer32,
+    logTime         SnmpAdminString,
+    logType         SnmpAdminString,
+    logDescription  SnmpAdminString
+}
+
+logIndex OBJECT-TYPE
+    SYNTAX      Integer32 (1..2147483647)
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+        "the latest log event is index = 1"
+    ::= { jbodDevLogEntry 1 }
+
+logTime OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the event time"
+    ::= { jbodDevLogEntry 2 }
+
+logType OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the log type - Info or Fail"
+    ::= { jbodDevLogEntry 3 }
+
+logDescription OBJECT-TYPE
+    SYNTAX      SnmpAdminString
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        "Describe the log"
+    ::= { jbodDevLogEntry 4 }
+
+END

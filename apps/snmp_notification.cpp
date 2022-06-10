@@ -115,7 +115,7 @@ namespace phosphor
                 snmp_sess_init(&session);
 
                 init_snmp("snmpapp");
-#ifdef _DEBUG
+#ifdef NETSNMP_DEBUG
                 // dump input/output packets in hexadecimal
                 netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID,
                     NETSNMP_DS_LIB_DUMP_PACKET, 1);
@@ -215,7 +215,7 @@ namespace phosphor
                 constexpr auto comm = "public";
 
                 // /etc/snmp/snmptrapd.conf
-                // createUser -e 0x00080201101214a0b1c2 myauthprivname MD5 authpasswd DES privpasswd
+                // createUser -e 0x00080201101214a0b1c2 myauthprivname MD5 authpasswd AES privpasswd
 
                 unsigned char engineid[] = { 0x00, 0x08, 0x02, 0x01, 0x10, 0x12, 0x14, 0xa0, 0xb1, 0xc2 };
                 constexpr auto username = "myauthprivname";
@@ -226,7 +226,7 @@ namespace phosphor
                 snmp_sess_init(&session);
 
                 init_snmp("snmpapp");
-#ifdef DEBUG
+#ifdef NETSNMP_DEBUG
                 // dump input/output packets in hexadecimal
                 netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID,
                     NETSNMP_DS_LIB_DUMP_PACKET, 1);
@@ -264,17 +264,16 @@ namespace phosphor
                 }
 
                 // set the privacy protocol DES
-                
+                /*
                 session.securityPrivProto = usmDESPrivProtocol;
                 session.securityPrivProtoLen = USM_PRIV_PROTO_DES_LEN;
                 session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-                
-                // AES
-                /*
+                */
+                // set the privacy protocol AES                
                 session.securityPrivProto = usmAESPrivProtocol;
                 session.securityPrivProtoLen = USM_PRIV_PROTO_AES_LEN;
                 session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-                */
+                
                 // set privacy key to a hashed version of privphrase
                 /* The thing to note is that the privacy 'generate_Ku' call uses the
                  * *authentication* protocol OID, rather than the privacy OID.
@@ -287,6 +286,7 @@ namespace phosphor
                     snmp_log(LOG_ERR, "Error generating Ku from privacy pass phrase. \n");
                     elog<InternalFailure>();
                 }
+                               
 
                 //auto mgrs = getManagers();
                 auto mgrs = { std::string("127.0.0.1") };

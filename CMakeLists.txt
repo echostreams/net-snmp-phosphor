@@ -56,15 +56,13 @@ set(snmplib_src
 	snmplib/transports/snmpUDPIPv4BaseDomain.c
 	snmplib/transports/snmpUDPIPv6Domain.c
 	snmplib/snmpusm.c
-	snmplib/snmpv3.c
-	snmplib/strlcat.c
-	snmplib/strlcpy.c
-	snmplib/strtok_r.c
-	snmplib/strtoull.c
+	snmplib/snmpv3.c	
 	snmplib/system.c
 	snmplib/tools.c
 	snmplib/ucd_compat.c
 	snmplib/vacm.c
+	snmplib/strlcat.c
+	snmplib/strlcpy.c	
 )
 
 if(WIN32)
@@ -77,6 +75,9 @@ if(WIN32)
 		snmplib/closedir.c
 		snmplib/getopt.c
 		snmplib/gettimeofday.c
+		snmplib/strtok_r.c
+		snmplib/strtoull.c
+		snmplib/winpipe.c
 	)
 else()
 	list(APPEND snmplib_src
@@ -96,7 +97,7 @@ list(APPEND snmplib_src
 	"snmplib/openssl/openssl_cfb128.c"
 	"snmplib/openssl/openssl_des_enc.c"
 	"snmplib/openssl/openssl_md5.c"
-	#"snmplib/openssl/openssl_ncbc_enc.c"
+	#"snmplib/openssl/openssl_ncbc_enc.c" #included in openssl_des_enc.c
 	"snmplib/openssl/openssl_set_key.c"
 	"snmplib/openssl/openssl_sha1.c"
 )
@@ -110,17 +111,72 @@ set(snmptrapd_src
 	"apps/snmptrapd.c"
 	"apps/snmptrapd_handlers.c"
 	"apps/snmptrapd_auth.c"
+	"apps/snmptrapd_log.c"
+)
 
-	"agent/snmp_agent.c"
-	"agent/agent_trap.c"
+set(agent_src
+	agent/agent_handler.c
+	agent/agent_index.c
+	agent/agent_read_config.c
+	agent/agent_registry.c
+	agent/agent_sysORTable.c
+	agent/agent_trap.c
+	agent/helpers/all_helpers.c
+	agent/helpers/baby_steps.c
+	agent/helpers/bulk_to_next.c
+	agent/helpers/cache_handler.c
+	agent/helpers/debug_handler.c
+	agent/helpers/instance.c
+	agent/helpers/mode_end_call.c
+	agent/helpers/multiplexer.c
+	agent/helpers/null.c
+	agent/helpers/old_api.c
+	agent/helpers/read_only.c
+	agent/helpers/row_merge.c
+	agent/helpers/scalar.c
+	agent/helpers/scalar_group.c
+	agent/helpers/serialize.c
+	agent/snmp_agent.c
+	agent/snmp_vars.c
+	agent/helpers/snmp_get_statistic.c
+	agent/helpers/stash_cache.c
+	agent/helpers/stash_to_next.c
+	agent/helpers/table.c
+	agent/helpers/table_array.c
+	agent/helpers/table_container.c
+	agent/helpers/table_data.c
+	agent/helpers/table_dataset.c
+	agent/helpers/table_iterator.c
+	agent/helpers/table_tdata.c
+	agent/helpers/watcher.c
+	agent/kernel.c
+	agent/mibgroup/agent/nsVacmAccessTable.c
+	agent/mibgroup/notification-log-mib/notification_log.c
+	agent/mibgroup/agentx/subagent.c
+	agent/mibgroup/agentx/agentx_config.c
+	agent/mibgroup/agentx/client.c
+	agent/mibgroup/agentx/protocol.c
+	agent/mibgroup/agentx/master.c
+	agent/mibgroup/agentx/master_admin.c
+	agent/mibgroup/snmpv3/snmpEngine.c
+	agent/mibgroup/snmpv3/usmUser.c
+	agent/mibgroup/snmpv3/usmConf.c
+	agent/mibgroup/mibII/vacm_conf.c
+	agent/mibgroup/utilities/execute.c
+	agent/mibgroup/utilities/iquery.c
+	agent/mibgroup/util_funcs/header_generic.c
 )
 if(WIN32)
 	list(APPEND snmptrapd_src snmplib/winservice.c)
+else()
+	list(APPEND agent_src agent/netsnmp_close_fds.c)
 endif()
 
-#add_executable(snmptrapd ${snmptrapd_src})
-#target_link_libraries(snmptrapd netsnmplib)
-#target_include_directories(snmptrapd PRIVATE agent/mibgroup)
+add_executable(snmptrapd ${snmptrapd_src})
+add_library(agent ${agent_src})
+target_link_libraries(snmptrapd agent netsnmplib)
+target_include_directories(snmptrapd PRIVATE agent/mibgroup)
+target_include_directories(agent PRIVATE agent/mibgroup)
 
 add_executable(phosphor-snmp 
 	"apps/phosphor_snmp.cpp" 
@@ -132,7 +188,13 @@ set_target_properties(phosphor-snmp PROPERTIES CXX_STANDARD 20)
 
 if(WIN32)
 	target_link_libraries(snmptrap ws2_32)
-	#target_link_libraries(snmptrapd ws2_32)
+	target_link_libraries(snmptrapd ws2_32)
 	target_link_libraries(phosphor-snmp ws2_32)
 	target_compile_options(phosphor-snmp PRIVATE /Zc:__cplusplus)
 endif()
+
+target_compile_definitions(phosphor-snmp PRIVATE
+    $<$<CONFIG:Debug>:
+        NETSNMP_DEBUG=1
+    >
+)

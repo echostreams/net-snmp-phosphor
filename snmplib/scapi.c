@@ -1348,6 +1348,30 @@ sc_encrypt(const oid * privtype, size_t privtypelen,
         EVP_CIPHER_CTX_free(ctx);
         *ctlen = ptlen;
     }
+#else
+#if defined(NETSNMP_USE_INTERNAL_CRYPTO) && defined(HAVE_AES)
+    if (USM_CREATE_USER_PRIV_AES == (pai->type & USM_PRIV_MASK_ALG)) {
+        AES_KEY aes_key;
+        (void)AES_set_encrypt_key(key, pai->proper_length * 8, &aes_key);
+        memcpy(my_iv, iv, ivlen);
+        int new_ivlen = 0;
+        AES_cfb128_encrypt(plaintext, ciphertext, ptlen, &aes_key, my_iv, &new_ivlen, AES_ENCRYPT);
+        *ctlen = ptlen;
+
+#if 0
+        // test decryption
+        unsigned char decrypttext[256];
+        memcpy(my_iv, iv, ivlen);
+        new_ivlen = 0;
+        AES_cfb128_encrypt(ciphertext, decrypttext, ptlen, &aes_key, my_iv, &new_ivlen, AES_DECRYPT);
+
+        int r = memcmp(plaintext, decrypttext, ptlen);
+        printf(" memcmp = %d\n", r);
+#endif
+
+        memset(&aes_key, 0, sizeof(aes_key));
+    }
+#endif
 #endif
   sc_encrypt_quit:
     /*
@@ -1562,6 +1586,18 @@ sc_decrypt(const oid * privtype, size_t privtypelen,
         /* Clean up */
         EVP_CIPHER_CTX_free(ctx);
         *ptlen = ctlen;
+    }
+#elif defined(NETSNMP_USE_INTERNAL_CRYPTO) && defined(HAVE_AES)
+    if (USM_CREATE_USER_PRIV_AES == (pai->type & USM_PRIV_MASK_ALG)) {
+        AES_KEY aes_key;
+        (void)AES_set_encrypt_key(key, pai->proper_length * 8, &aes_key);
+
+        memcpy(my_iv, iv, ivlen);
+        int new_ivlen = 0;
+        AES_cfb128_encrypt(ciphertext, plaintext, ctlen,
+            &aes_key, my_iv, &new_ivlen, AES_DECRYPT);
+        *ptlen = ctlen;
+        memset(&aes_key, 0, sizeof(aes_key));
     }
 #endif
 
