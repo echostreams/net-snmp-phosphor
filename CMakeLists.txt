@@ -149,7 +149,10 @@ set(agent_src
 	agent/helpers/table_iterator.c
 	agent/helpers/table_tdata.c
 	agent/helpers/watcher.c
+	agent/helpers/row_merge.c
 	agent/kernel.c
+	agent/agent_sysORTable.c
+	#agent/mib_modules.c
 	agent/mibgroup/agent/nsVacmAccessTable.c
 	agent/mibgroup/notification-log-mib/notification_log.c
 	agent/mibgroup/agentx/subagent.c
@@ -162,6 +165,10 @@ set(agent_src
 	agent/mibgroup/snmpv3/usmUser.c
 	agent/mibgroup/snmpv3/usmConf.c
 	agent/mibgroup/mibII/vacm_conf.c
+	agent/mibgroup/mibII/vacm_vars.c
+	agent/mibgroup/mibII/system_mib.c
+	agent/mibgroup/mibII/updates.c
+	agent/mibgroup/mibII/sysORTable.c
 	agent/mibgroup/utilities/execute.c
 	agent/mibgroup/utilities/iquery.c
 	agent/mibgroup/util_funcs/header_generic.c
@@ -186,15 +193,25 @@ add_executable(phosphor-snmp
 target_link_libraries(phosphor-snmp netsnmplib)
 set_target_properties(phosphor-snmp PROPERTIES CXX_STANDARD 20)
 
-if(WIN32)
-	target_link_libraries(snmptrap ws2_32)
-	target_link_libraries(snmptrapd ws2_32)
-	target_link_libraries(phosphor-snmp ws2_32)
-	target_compile_options(phosphor-snmp PRIVATE /Zc:__cplusplus)
-endif()
-
 target_compile_definitions(phosphor-snmp PRIVATE
     $<$<CONFIG:Debug>:
         NETSNMP_DEBUG=1
     >
 )
+
+add_executable(jbod-subagent 
+	"jbod/jbod_subagent.c"
+	"jbod/jbodDevBase.c"
+	"jbod/platform.c"
+)
+target_link_libraries(jbod-subagent agent netsnmplib)
+
+if(WIN32)
+	target_link_libraries(snmptrap ws2_32)
+	target_link_libraries(snmptrapd ws2_32)
+	target_link_libraries(phosphor-snmp ws2_32)
+	target_link_libraries(jbod-subagent ws2_32)
+	target_compile_options(phosphor-snmp PRIVATE /Zc:__cplusplus)
+endif()
+
+
